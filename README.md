@@ -27,13 +27,6 @@ A universal, cross-platform web implementation of **Vega** engineered to run sea
    - Deploy as a free Cloudflare Worker for global multi-gigabit streaming acceleration.
    - Point the web app to your worker URL via `localStorage.setItem('vegaStreamAccelerator', 'https://your-worker.workers.dev')`.
 
-4. **Bundled Unpacked Browser Extension (`extension/`)**
-   - Packaged inside the `extension/` directory with full Manifest V3 compatibility (`cookieRules.mjs`, `media.mjs`, `http.mjs`, `background.mjs`).
-   - For PC Chrome/Edge users who prefer running with the browser extension:
-     1. Open `chrome://extensions/` and toggle **Developer mode**.
-     2. Click **Load unpacked** and select the `d:\vega-web\extension` folder.
-     3. Open the extension popup, click **Allow all websites**, and reload Vega Web.
-
 ---
 
 ## 🏃 Running the Web App Locally
@@ -72,6 +65,23 @@ You can connect the accelerator in either of two ways:
    setStreamAccelerator('https://your-worker.workers.dev');
    ```
    (To reset back to local server, call `setStreamAccelerator(null)`).
+
+---
+
+## 🚀 Deploying to Koyeb (Docker)
+
+1. Push your repository to **GitHub**.
+2. Go to [Koyeb Dashboard](https://app.koyeb.com/) and click **Create App** -> **GitHub**.
+3. Select your repository. Koyeb will automatically detect the **`Dockerfile`**.
+4. Configure service settings:
+   - **Type**: Web Service
+   - **Port**: `8000` (HTTP)
+   - **Health check path**: `/healthz`
+5. (Optional) Set Environment Variables:
+   - `PROXY_ALLOWED_HOSTS=*`
+   - `STREAM_ALLOWED_HOSTS=*`
+   - `STREAM_SECRET=your_optional_secret`
+6. Click **Deploy**. Koyeb will build the lightweight Alpine Node image and provide you with a live HTTPS URL.
 
 ---
 
