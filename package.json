@@ -1,0 +1,20 @@
+{
+  "name": "vega-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web client for Vega-compatible providers",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server/server.mjs",
+    "build:worker": "esbuild src/worker.js --bundle --format=iife --platform=browser --minify --legal-comments=none --define:global=globalThis --outfile=public/provider-worker.js",
+    "test": "node --test test/runtime.test.mjs test/ui.test.mjs test/server.test.mjs test/stream.test.mjs"
+  },
+  "devDependencies": {
+    "axios": "^1.10.0",
+    "buffer": "^6.0.3",
+    "cheerio": "^1.1.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "^30.1.3"
+  }
+}
