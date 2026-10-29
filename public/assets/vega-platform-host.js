@@ -189,7 +189,7 @@
           };
 
           var controller = new AbortController();
-          var timer = setTimeout(function() { controller.abort(); }, 5000);
+          var timer = setTimeout(function() { controller.abort(); }, 18000);
           var res = await fetch('/api/proxy', {
             method: 'POST',
             headers: { 'content-type': 'application/json', 'x-proxy-key': proxyKey },
@@ -215,7 +215,7 @@
                 }
               };
               var c2 = new AbortController();
-              var t2 = setTimeout(function() { c2.abort(); }, 5000);
+              var t2 = setTimeout(function() { c2.abort(); }, 18000);
               var tRes = await fetch('/api/proxy', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json', 'x-proxy-key': proxyKey },
