@@ -15,7 +15,7 @@ import { Readable, pipeline } from "node:stream";
 import { parseAllowList, hostAllowed, checkTarget, ProxyError, safeEqual } from "./proxy.mjs";
 
 const FORWARDABLE = new Set(["referer", "origin", "user-agent", "cookie", "authorization", "accept", "accept-language", "x-requested-with"]);
-const DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const TOKEN_TTL_MS = 6 * 60 * 60 * 1000;
 const MAX_PLAYLIST = 5 * 1024 * 1024;
 const HEADER_TIMEOUT_MS = 25_000;
@@ -226,6 +226,12 @@ export async function relayStream(req, res) {
       "user-agent": DEFAULT_UA,
       accept: "*/*",
       "accept-encoding": "identity",
+      "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+      "sec-fetch-dest": "video",
+      "sec-fetch-mode": "no-cors",
+      "sec-fetch-site": "cross-site",
       ...cleanHeaders(targetHeaders)
     };
     if (!headers.referer) {
@@ -237,10 +243,15 @@ export async function relayStream(req, res) {
       await checkTarget(current, cfg.allow, cfg.allowPrivate, "STREAM_ALLOWED_HOSTS");
       r = await fetch(current, { method: "GET", headers, redirect: "manual", signal: ctrl.signal });
       const loc = r.headers.get("location");
+      const sc = r.headers.get("set-cookie");
+      if (sc) {
+        const newCookies = sc.split(/,(?=\s*[^;]+=[^;]+)/).map(c => c.split(";")[0].trim()).join("; ");
+        headers.cookie = headers.cookie ? (headers.cookie + "; " + newCookies) : newCookies;
+      }
       if ([301, 302, 303, 307, 308].includes(r.status) && loc && hops < 5) {
         hops++;
         const next = new URL(loc, current);
-        if (next.host !== current.host) { headers = { ...headers }; delete headers.cookie; delete headers.authorization; }
+        if (next.host !== current.host) { headers = { ...headers }; delete headers.authorization; }
         current = next;
         try { await r.body?.cancel(); } catch {}
         continue;
@@ -300,7 +311,8 @@ export async function relayStream(req, res) {
       "access-control-allow-methods": "GET, HEAD, OPTIONS",
       "access-control-allow-headers": "*",
       "access-control-expose-headers": "Content-Length, Content-Range, Accept-Ranges, Content-Type",
-      "cross-origin-resource-policy": "cross-origin"
+      "cross-origin-resource-policy": "cross-origin",
+      "x-accel-buffering": "no"
     };
     for (const k of ["content-range", "accept-ranges", "etag", "last-modified"]) { const v = r.headers.get(k); if (v) out[k] = v; }
     out["content-type"] = finalCt;
