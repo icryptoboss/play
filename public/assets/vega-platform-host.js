@@ -309,12 +309,8 @@
     if (!localStorage.getItem('vegaSwipeGestures')) localStorage.setItem('vegaSwipeGestures', 'true');
     if (!localStorage.getItem('verificationWindows')) localStorage.setItem('verificationWindows', 'allow');
     if (!localStorage.getItem('verificationWindowPolicy')) localStorage.setItem('verificationWindowPolicy', 'allow');
-
-    // Clean up any previously auto-seeded sources so active source list starts empty
-    if (localStorage.getItem('vegaAutoSeededZenda') !== 'cleared') {
-      localStorage.removeItem('providerSources');
-      localStorage.removeItem('PROVIDER_SOURCES');
-      localStorage.setItem('vegaAutoSeededZenda', 'cleared');
+    if (!localStorage.getItem('PROVIDER_SOURCES')) {
+      localStorage.setItem('PROVIDER_SOURCES', JSON.stringify(['https://zenda-cross.github.io/vega-providers']));
     }
 
     // Pre-seed CacheBaseUrl for all providers to avoid 404s and network delays
@@ -393,90 +389,6 @@
   } catch (_) {}
 
   console.log('[Vega] Universal Platform Host Bridge loaded (Zero Extensions Required).');
-
-  /* =========================================================================
-   * Add Source Dialog Quick-Fill: Auto-fill "zenda-cross"
-   * ========================================================================= */
-  function fillZendaCrossSource() {
-    var dialog = document.querySelector('.add-source-dialog, [role="dialog"]');
-    var input = (dialog && dialog.querySelector('.extension-dialog-input input, input[placeholder*="author"], input[type="text"]')) ||
-                document.querySelector('.extension-dialog-input input');
-    if (input) {
-      var proto = window.HTMLInputElement && window.HTMLInputElement.prototype;
-      var setter = proto ? Object.getOwnPropertyDescriptor(proto, 'value')?.set : null;
-      if (setter) {
-        setter.call(input, 'zenda-cross');
-      } else {
-        input.value = 'zenda-cross';
-      }
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-      input.focus();
-
-      var chip = document.getElementById('vega-fill-zenda-btn');
-      if (chip) {
-        chip.style.borderColor = '#10b981';
-        chip.style.color = '#10b981';
-        chip.innerHTML = '<span>✓</span> Filled: zenda-cross';
-        setTimeout(function() {
-          if (chip) {
-            chip.style.borderColor = 'rgba(255, 99, 71, 0.4)';
-            chip.style.color = '#FF6347';
-            chip.innerHTML = '<span>⚡</span> zenda-cross';
-          }
-        }, 1500);
-      }
-    }
-  }
-  window.fillZendaCrossSource = fillZendaCrossSource;
-
-  (function initAddSourceQuickFill() {
-    function injectQuickFill() {
-      var dialog = document.querySelector('.add-source-dialog, [role="dialog"]');
-      if (!dialog) return;
-
-      var inputWrapper = dialog.querySelector('.extension-dialog-input');
-      if (inputWrapper && !dialog.querySelector('#vega-quick-fill-source')) {
-        var container = document.createElement('div');
-        container.id = 'vega-quick-fill-source';
-        container.style.cssText = 'display:flex;align-items:center;gap:8px;margin:8px 0 6px;font-size:12.5px;color:rgba(255,255,255,0.7);font-family:system-ui, -apple-system, sans-serif;';
-        container.innerHTML = [
-          '<span>Suggested:</span>',
-          '<button type="button" id="vega-fill-zenda-btn" title="Click to fill zenda-cross" style="cursor:pointer;background:rgba(255,99,71,0.15);border:1px solid rgba(255,99,71,0.4);color:#FF6347;border-radius:6px;padding:3px 10px;font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s ease;">',
-          '  <span>⚡</span> zenda-cross',
-          '</button>'
-        ].join('');
-
-        var btn = container.querySelector('#vega-fill-zenda-btn');
-        if (btn) {
-          btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            fillZendaCrossSource();
-          });
-        }
-
-        if (inputWrapper.nextSibling) {
-          inputWrapper.parentNode.insertBefore(container, inputWrapper.nextSibling);
-        } else {
-          inputWrapper.parentNode.appendChild(container);
-        }
-      }
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', injectQuickFill);
-    } else {
-      injectQuickFill();
-    }
-
-    var observer = new MutationObserver(function() {
-      injectQuickFill();
-    });
-    observer.observe(document.body || document.documentElement, {
-      childList: true,
-      subtree: true
-    });
-  })();
 
   /* =========================================================================
    * Mobile Video Enhancements:
