@@ -162,6 +162,7 @@ export function rewriteDirectPlaylist(text, base, headers, origin = "") {
 }
 
 function fail(res, status, message) {
+  console.error(`[Stream Relay ${status}] ${message}`);
   if (res.headersSent) return res.destroy();
   res.writeHead(status, {
     "content-type": "application/json",
@@ -235,7 +236,12 @@ export async function relayStream(req, res) {
       ...cleanHeaders(targetHeaders)
     };
     if (!headers.referer) {
-      try { headers.referer = new URL(targetUrl).origin + "/"; } catch {}
+      try {
+        const uHost = new URL(targetUrl).hostname.toLowerCase();
+        if (!/(pixeldrain|r2\.dev|googleusercontent|archive\.org|gofile)/i.test(uHost)) {
+          headers.referer = new URL(targetUrl).origin + "/";
+        }
+      } catch {}
     }
     for (const k of ["range", "if-range"]) if (req.headers[k]) headers[k] = String(req.headers[k]);
     let current = new URL(targetUrl), hops = 0, r;
@@ -292,6 +298,17 @@ export async function relayStream(req, res) {
         "cross-origin-resource-policy": "cross-origin"
       });
       return res.end(req.method === "HEAD" ? undefined : raw);
+    }
+
+    if (!r.ok && (r.status === 403 || r.status === 503) && isDirect) {
+      console.warn(`[Stream Relay] Upstream returned ${r.status} to server for ${current.href}. Redirecting browser directly...`);
+      res.writeHead(302, {
+        "location": current.href,
+        "access-control-allow-origin": "*",
+        "cache-control": "no-store",
+        "x-accel-buffering": "no"
+      });
+      return res.end();
     }
 
     let finalCt = ct;
