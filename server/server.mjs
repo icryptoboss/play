@@ -151,7 +151,7 @@ export function createApp(opts = {}) {
   function handleStatic(req, res, pathname) {
     if (req.method !== "GET" && req.method !== "HEAD") return send(res, 405, { allow: "GET, HEAD" }, "");
     const key = pathname === "/" ? "/index.html" : pathname;
-    let f = files.get(key);
+    const f = files.get(key);
     if (!f) {
       const baseDir = path.resolve(opts.publicDir || PUBLIC_DIR);
       const diskPath = path.resolve(baseDir, "." + pathname);
@@ -167,10 +167,7 @@ export function createApp(opts = {}) {
         };
         return send(res, 200, h, req.method === "HEAD" ? "" : buf);
       }
-      if (!path.extname(pathname) && (req.headers["sec-fetch-mode"] === "navigate" || (req.headers["accept"] && req.headers["accept"].includes("text/html")))) {
-        f = files.get("/index.html");
-      }
-      if (!f) return send(res, 404, { "content-type": "text/plain; charset=utf-8" }, "Not found");
+      return send(res, 404, { "content-type": "text/plain; charset=utf-8" }, "Not found");
     }
     const h = {
       "content-type": f.type,

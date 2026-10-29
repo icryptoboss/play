@@ -81,33 +81,3 @@ test("proxy forwards cookies across redirects and accumulates cookieUpdates", as
   assert.match(body.receivedCookie, /session_id=12345/);
   assert.match(body.receivedUserAgent, /Chrome\/131/);
 });
-
-test("SPA routes serve index.html on browser refresh / page navigation", async () => {
-  const { createApp } = await import("../server/server.mjs");
-  const testApp = createApp();
-  await new Promise((r) => testApp.listen(0, "127.0.0.1", r));
-  const testBase = `http://127.0.0.1:${testApp.address().port}`;
-
-  try {
-    // 1. Browser refresh on /extensions serves index.html
-    const extRes = await fetch(testBase + "/extensions", {
-      headers: { "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" }
-    });
-    assert.equal(extRes.status, 200);
-    assert.match(await extRes.text(), /<title>Vega Web<\/title>/);
-
-    // 2. Browser refresh on /settings serves index.html
-    const setRes = await fetch(testBase + "/settings", {
-      headers: { "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" }
-    });
-    assert.equal(setRes.status, 200);
-    assert.match(await setRes.text(), /<title>Vega Web<\/title>/);
-
-    // 3. Non-navigation request for non-existent route returns 404
-    const nopeRes = await fetch(testBase + "/not-real-endpoint");
-    assert.equal(nopeRes.status, 404);
-  } finally {
-    testApp.close();
-  }
-});
-
